@@ -1,0 +1,12 @@
+@tailwind base; @tailwind components; @tailwind utilities;
+html, body { overflow-x: hidden; }
+body { @apply bg-cream text-earth font-sans antialiased; }
+h1, h2, h3 { @apply font-display text-earth-dark; }
+:focus-visible { outline: 2px solid #4E5D42; outline-offset: 2px; }
+@layer components {
+  .container-x { @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8; }
+  .field { @apply w-full rounded-lg border border-beige-dark bg-white px-3 py-2.5 text-sm text-earth-dark placeholder:text-earth-light/70 focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30; }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+@keyframes drawer { from { transform: translateX(-100%); } to { transform: none; } }
+.drawer-in { animation: drawer .22s ease-out; }

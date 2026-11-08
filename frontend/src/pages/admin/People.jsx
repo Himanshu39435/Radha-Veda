@@ -1,0 +1,29 @@
+import { useState } from 'react';
+import { api } from '../../lib/api';
+import { useAction, useFetch } from '../../lib/hooks';
+import { Badge, Button, Card, Check, Empty, Input, Modal, PageTitle, Pager, Spinner, Table } from '../../components/ui';
+import { date, dateTime, money } from '../../lib/utils';
+const A = api('admin');
+export function Customers() {
+  const [q, setQ] = useState(''); const [page, setPage] = useState(1); const [sel, setSel] = useState(null);
+  const { data, loading } = useFetch(() => A.get(`/admin/customers?q=${encodeURIComponent(q)}&page=${page}`), [q, page]);
+  const { data: d } = useFetch(() => (sel ? A.get(`/admin/customers/${sel}`) : Promise.resolve(null)), [sel]);
+  return (<div><PageTitle title="Customers" /><input className="field mb-4 max-w-sm" placeholder="Search name, email, phone" aria-label="Search customers" value={q} onChange={e => { setQ(e.target.value); setPage(1); }} />
+    {loading ? <Spinner /> : !data.customers.length ? <Empty title="No customers found" /> : <><Table head={['Name', 'Email', 'Phone', 'Joined', '']}>{data.customers.map(c => <tr key={c._id}><td className="font-medium">{c.name}</td><td>{c.email}</td><td>{c.phone || '—'}</td><td>{date(c.createdAt)}</td><td><Button size="sm" variant="outline" onClick={() => setSel(c._id)}>Profile</Button></td></tr>)}</Table><Pager page={page} pages={data.pages} set={setPage} /></>}
+    <Modal open={!!sel} wide onClose={() => setSel(null)} title="Customer profile">{!d ? <Spinner /> : <div className="space-y-3"><Card className="text-sm"><b>{d.customer.name}</b><p>{d.customer.email} · {d.customer.phone || 'no phone'}</p></Card>
+      <Card className="text-sm"><b>Addresses</b>{d.addresses.length ? d.addresses.map(a => <p key={a._id}>{a.line1}, {a.city}, {a.state} - {a.pincode}</p>) : <p className="text-earth-light">None saved</p>}</Card>
+      <Card><b>Order history</b>{d.orders.length ? d.orders.map(o => <div key={o._id} className="flex justify-between border-b border-beige py-2 text-sm last:border-0"><span>{o.orderId} · {date(o.createdAt)}</span><span className="flex gap-2"><Badge>{o.status}</Badge>{money(o.total)}</span></div>) : <p className="text-sm text-earth-light">No orders</p>}</Card></div>}</Modal></div>);
+}
+const PERMS = [['orders.view', 'View assigned orders'], ['orders.update', 'Update order status'], ['orders.invoice', 'Print invoices'], ['orders.payment', 'Record COD payments']];
+export function StaffMgmt() {
+  const { data, loading, reload } = useFetch(() => A.get('/admin/staff'), []); const [m, setM] = useState(null); const [act, busy] = useAction(); const [log, setLog] = useState(null);
+  const blank = { name: '', email: '', phone: '', password: '', permissions: PERMS.map(p => p[0]) };
+  const save = e => { e.preventDefault(); act(async () => { if (m._id) { const b = { name: m.name, phone: m.phone || undefined, permissions: m.permissions, ...(m.password && { password: m.password }) }; await A.put(`/admin/staff/${m._id}`, b); } else await A.post('/admin/staff', { ...m, phone: m.phone || undefined }); setM(null); reload(); }, 'Staff saved'); };
+  const toggle = (s) => act(async () => { await A.put(`/admin/staff/${s._id}`, { isActive: !s.user.isActive }); reload(); }, s.user.isActive ? 'Deactivated' : 'Activated');
+  const tp = k => setM({ ...m, permissions: m.permissions.includes(k) ? m.permissions.filter(x => x !== k) : [...m.permissions, k] });
+  return (<div><PageTitle title="Staff management"><Button onClick={() => setM(blank)}>Add staff</Button></PageTitle>
+    {loading ? <Spinner /> : !data.length ? <Empty title="No staff yet" hint="Create a staff account to assign orders." /> : <Table head={['Name', 'Email', 'Assigned orders', 'Status', '']}>{data.map(s => <tr key={s._id}><td className="font-medium">{s.user.name}</td><td>{s.user.email}</td><td>{s.assignedOrders}</td><td><Badge className={s.user.isActive ? 'bg-sage-light text-sage-dark' : 'bg-red-100 text-red-800'}>{s.user.isActive ? 'Active' : 'Inactive'}</Badge></td><td className="space-x-1 whitespace-nowrap"><Button size="sm" variant="outline" onClick={() => setM({ _id: s._id, name: s.user.name, phone: s.user.phone || '', password: '', permissions: s.permissions })}>Edit</Button><Button size="sm" variant="soft" onClick={() => setLog(s)}>Activity</Button><Button size="sm" variant="ghost" onClick={() => toggle(s)}>{s.user.isActive ? 'Deactivate' : 'Activate'}</Button></td></tr>)}</Table>}
+    <Modal open={!!m} onClose={() => setM(null)} title={m?._id ? 'Edit staff' : 'New staff account'}>{m && <form onSubmit={save} className="space-y-3"><Input required label="Name" value={m.name} onChange={e => setM({ ...m, name: e.target.value })} />{!m._id && <Input required type="email" label="Email (login)" value={m.email} onChange={e => setM({ ...m, email: e.target.value })} />}<Input label="Phone" value={m.phone} onChange={e => setM({ ...m, phone: e.target.value })} /><Input required={!m._id} minLength={8} type="password" label={m._id ? 'New password (leave blank to keep)' : 'Password (8+ chars)'} value={m.password} onChange={e => setM({ ...m, password: e.target.value })} />
+      <div className="space-y-2"><p className="text-sm font-medium">Permissions</p>{PERMS.map(([k, l]) => <Check key={k} label={l} checked={m.permissions.includes(k)} onChange={() => tp(k)} />)}</div><Button loading={busy} className="w-full">Save staff</Button></form>}</Modal>
+    <Modal open={!!log} onClose={() => setLog(null)} title={`Activity: ${log?.user.name}`}>{log?.activity.length ? <ul className="space-y-2 text-sm">{log.activity.map((a, i) => <li key={i} className="flex justify-between border-b border-beige pb-1"><span>{a.action}</span><span className="text-earth-light">{dateTime(a.at)}</span></li>)}</ul> : <p className="text-sm text-earth-light">No activity yet.</p>}</Modal></div>);
+}
