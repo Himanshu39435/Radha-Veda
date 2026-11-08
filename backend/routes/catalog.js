@@ -13,7 +13,17 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 *
 const admin = [protect, authorize('admin')];
 
 router.get('/settings', ah(async (req, res) => res.json(await getSettings())));
-router.get('/categories', ah(async (req, res) => res.json(await Category.find({ isActive: true }).sort('name'))));
+router.get('/categories', ah(async (req, res) => {
+  const categories = await Category.find({ isActive: true }).sort('name').lean();
+  const fallbackProducts = await Product.find({ isAvailable: true, category: { $in: categories.map(c => c._id) } })
+    .select('category images').sort('createdAt').lean();
+  const fallbackByCategory = new Map();
+  for (const p of fallbackProducts) {
+    const image = p.images?.[0]?.url;
+    if (image && !fallbackByCategory.has(String(p.category))) fallbackByCategory.set(String(p.category), image);
+  }
+  res.json(categories.map(c => ({ ...c, image: c.image || fallbackByCategory.get(String(c._id)) || '' })));
+}));
 
 router.post('/newsletter', ah(async (req, res) => {
   const { email } = z.object({ email: z.string().email() }).parse(req.body);

@@ -22,10 +22,18 @@ const offlineHero = [
   { name: 'Herbal Glow Face Pack', slug: 'herbal-glow-face-pack', minPrice: 131, images: [{ url: '/products/herbal-glow-face-pack-1.jpg' }, { url: '/products/herbal-glow-face-pack-2.jpg' }] },
   { name: 'Aloe & Cucumber Cooling Pack', slug: 'aloe-and-cucumber-cooling-pack', minPrice: 125, images: [{ url: '/products/aloe-and-cucumber-cooling-pack-1.jpg' }] },
 ];
+const offlineCategories = [
+  { _id: 'pure-multani-mitti', name: 'Pure Multani Mitti', slug: 'pure-multani-mitti', image: '/products/pure-multani-mitti-powder-2.jpg' },
+  { _id: 'rose-multani-mitti', name: 'Rose Multani Mitti', slug: 'rose-multani-mitti', image: '/products/rose-multani-mitti-face-pack-2.jpg' },
+  { _id: 'neem-multani-mitti', name: 'Neem Multani Mitti', slug: 'neem-multani-mitti', image: '/products/neem-multani-mitti-face-pack-2.jpg' },
+  { _id: 'herbal-face-pack', name: 'Herbal Face Pack', slug: 'herbal-face-pack', image: '/products/herbal-glow-face-pack-2.jpg' },
+  { _id: 'natural-skincare', name: 'Natural Skincare', slug: 'natural-skincare', image: '/products/natural-skincare-detox-mask-2.jpg' },
+];
 
 export default function Home() {
   const { data: cats } = useFetch(() => api().get('/categories'), []);
   const { data: feat } = useFetch(() => api().get('/products?filter=featured&limit=4'), []);
+  const categories = cats?.length ? cats : offlineCategories;
   const hero = ((feat?.products || []).filter(p => p.images?.[0]?.url).slice(0, 3).length >= 2
     ? (feat?.products || []).filter(p => p.images?.[0]?.url).slice(0, 3)
     : offlineHero);
@@ -66,7 +74,7 @@ export default function Home() {
     <section className="border-b border-beige-dark/50 bg-white"><div className="container-x grid grid-cols-2 gap-4 py-5 md:grid-cols-4">{[[Leaf, '100% natural', 'No fillers or synthetic colour'], [Truck, 'Free shipping', 'On orders above ₹499'], [Banknote, 'Cash on Delivery', 'Pay when it arrives'], [RotateCcw, 'Easy returns', '7 days on unopened packs']].map(([I, t, d]) => <div key={t} className="flex items-center gap-3"><I className="h-8 w-8 shrink-0 rounded-full bg-sage-light p-1.5 text-sage-dark" /><p className="text-sm leading-tight"><b className="block text-earth-dark">{t}</b><span className="text-earth-light">{d}</span></p></div>)}</div></section>
 
     <section className="container-x mt-16"><h2 className="mb-6 text-4xl font-semibold">Shop by category</h2>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">{(cats || []).map(c => <Link key={c._id} to={`/shop?category=${c.slug}`} className="group overflow-hidden rounded-2xl border border-beige-dark/60 bg-white transition-shadow hover:shadow-lg"><div className="aspect-square overflow-hidden bg-beige-light"><Img src={c.image} alt={c.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /></div><p className="p-3 text-center font-display text-lg font-semibold leading-tight text-earth-dark sm:text-xl">{c.name}</p></Link>)}</div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">{categories.map(c => <Link key={c._id} to={`/shop?category=${c.slug}`} className="group overflow-hidden rounded-2xl border border-beige-dark/60 bg-white transition-shadow hover:shadow-lg"><div className="aspect-square overflow-hidden bg-beige-light"><Img src={c.image || offlineCategories.find(x => x.slug === c.slug)?.image} alt={c.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /></div><p className="p-3 text-center font-display text-lg font-semibold leading-tight text-earth-dark sm:text-xl">{c.name}</p></Link>)}</div>
     </section>
 
     <Row title="Featured products" filter="featured" to="/shop?filter=featured" />
