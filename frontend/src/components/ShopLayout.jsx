@@ -17,20 +17,23 @@ export default function ShopLayout() {
   const { data: s } = useSettings(); const nav = useNavigate(); const [q, setQ] = useState('');
   return (
     <div className="flex min-h-screen flex-col">
-      <div className="bg-sage-dark py-2 text-center text-xs text-white">Free shipping above ₹{s?.freeShippingThreshold ?? 499} · Cash on Delivery available across India</div>
-      <header className="sticky top-0 z-30 border-b border-beige-dark/60 bg-cream/95 backdrop-blur">
-        <div className="container-x flex h-16 items-center gap-1 sm:gap-3">
-          <button className="rounded-full p-2 hover:bg-beige lg:hidden" aria-label="Menu" onClick={() => setOpen(true)}><Menu className="h-6 w-6" /></button>
-          <Link to="/" className="flex shrink-0 items-center gap-1.5 whitespace-nowrap sm:gap-2">{s?.logo ? <img src={s.logo} alt="" className="h-8 w-auto" /> : <Leaf className="h-6 w-6 text-sage-dark" />}<span className="font-display text-xl font-bold text-earth-dark sm:text-2xl">{s?.brandName || 'Radha Veda'}</span></Link>
-          <nav className="ml-8 hidden gap-6 text-sm font-medium lg:flex">{links.map(([to, l]) => <NavLink key={l} to={to} className="hover:text-sage-dark">{l}</NavLink>)}</nav>
-          <form className="ml-auto hidden md:block" onSubmit={(e) => { e.preventDefault(); nav(`/shop?q=${encodeURIComponent(q)}`); }}><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search products" className="field w-56 rounded-full" aria-label="Search" /></form>
-          <div className="ml-auto flex items-center gap-1 md:ml-2">
-            <Link to={user ? '/account/wishlist' : '/login'} aria-label="Wishlist" className="rounded-full p-2.5 hover:bg-beige"><Heart className="h-5 w-5" /></Link>
-            <Link to={dash} aria-label="My dashboard" className="rounded-full p-2.5 hover:bg-beige"><User className="h-5 w-5" /></Link>
-            <Link to="/cart" aria-label="Cart" className="relative rounded-full p-2.5 hover:bg-beige"><ShoppingBag className="h-5 w-5" />{count > 0 && <span className="absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-sage-dark px-1 text-[11px] font-bold text-white">{count}</span>}</Link>
+      <div className="fixed inset-x-0 top-0 z-30">
+        <div className="bg-sage-dark py-2 text-center text-xs text-white">Free shipping above ₹{s?.freeShippingThreshold ?? 499} · Cash on Delivery available across India</div>
+        <header className="border-b border-beige-dark/60 bg-cream/95 backdrop-blur">
+          <div className="container-x flex h-16 items-center gap-1 sm:gap-3">
+            <button className="rounded-full p-2 hover:bg-beige lg:hidden" aria-label="Menu" onClick={() => setOpen(true)}><Menu className="h-6 w-6" /></button>
+            <Link to="/" className="flex shrink-0 items-center gap-1.5 whitespace-nowrap sm:gap-2">{s?.logo ? <img src={s.logo} alt="" className="h-8 w-auto" /> : <Leaf className="h-6 w-6 text-sage-dark" />}<span className="font-display text-xl font-bold text-earth-dark sm:text-2xl">{s?.brandName || 'Radha Veda'}</span></Link>
+            <nav className="ml-8 hidden gap-6 text-sm font-medium lg:flex">{links.map(([to, l]) => <NavLink key={l} to={to} className="hover:text-sage-dark">{l}</NavLink>)}</nav>
+            <form className="ml-auto hidden md:block" onSubmit={(e) => { e.preventDefault(); nav(`/shop?q=${encodeURIComponent(q)}`); }}><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search products" className="field w-56 rounded-full" aria-label="Search" /></form>
+            <div className="ml-auto flex items-center gap-1 md:ml-2">
+              <Link to={user ? '/account/wishlist' : '/login'} aria-label="Wishlist" className="rounded-full p-2.5 hover:bg-beige"><Heart className="h-5 w-5" /></Link>
+              <Link to={dash} aria-label="My dashboard" className="rounded-full p-2.5 hover:bg-beige"><User className="h-5 w-5" /></Link>
+              <Link to="/cart" aria-label="Cart" className="relative rounded-full p-2.5 hover:bg-beige"><ShoppingBag className="h-5 w-5" />{count > 0 && <span className="absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-sage-dark px-1 text-[11px] font-bold text-white">{count}</span>}</Link>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      </div>
+      <div className="h-24 shrink-0" aria-hidden="true" />
       {open && <div className="fixed inset-0 z-50 lg:hidden"><div className="absolute inset-0 bg-earth-dark/50" onClick={() => setOpen(false)} />
         <div className="drawer-in absolute inset-y-0 left-0 w-72 bg-cream p-5"><button className="mb-4 rounded-full p-2 hover:bg-beige" aria-label="Close" onClick={() => setOpen(false)}><X className="h-5 w-5" /></button>
           <nav className="flex flex-col">{links.map(([to, l]) => <Link key={l} to={to} onClick={() => setOpen(false)} className="border-b border-beige py-3 font-medium">{l}</Link>)}</nav></div></div>}
