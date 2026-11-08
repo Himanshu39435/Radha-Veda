@@ -170,9 +170,9 @@ TEST_MONGO_URI=mongodb://127.0.0.1:27017/radhaveda_test npm test
 5. Run the seed once (locally, pointed at the production database): `npm run seed`. Then **immediately change the admin password and delete the demo staff user.**
 6. Add a custom domain such as `api.radhaveda.com`. Your webhook URL becomes `https://api.radhaveda.com/api/webhooks/razorpay`.
 
-### Frontend (Vercel)
+### Frontend (Vercel or Netlify)
 1. New Project, root directory `frontend`, framework Vite, build `npm run build`, output `dist`.
-2. Environment variable: `VITE_API_URL=https://api.radhaveda.com` (origin only, no `/api`).
+2. Add the environment variable `VITE_API_URL=https://api.radhaveda.com` (origin only, no `/api`) in the hosting provider's production environment, then redeploy. Without it, the home page shows bundled fallback products but all dynamic catalog requests incorrectly target the frontend domain.
 3. `vercel.json` and `public/_redirects` already provide the SPA rewrite so deep links work.
 4. Add your domain. Make sure `CLIENT_URL` on the backend matches it exactly (comma-separate multiple origins, e.g. with and without `www`).
 

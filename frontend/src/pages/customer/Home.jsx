@@ -10,11 +10,36 @@ import Img from '../../components/Img';
 import { money } from '../../lib/utils';
 import { useSettings } from '../../components/ShopLayout';
 
+const offlineProduct = (name, slug, price, flags = {}) => ({
+  _id: `offline-${slug}`, name, slug, minPrice: price, mrp: price, inStock: true,
+  images: [{ url: `/products/${slug}-1.jpg` }], ...flags,
+});
+const offlineProducts = {
+  featured: [
+    offlineProduct('Pure Multani Mitti Powder', 'pure-multani-mitti-powder', 84, { isFeatured: true, isBestSeller: true }),
+    offlineProduct('Rose Multani Mitti Face Pack', 'rose-multani-mitti-face-pack', 109, { isFeatured: true, isBestSeller: true }),
+    offlineProduct('Neem Multani Mitti Face Pack', 'neem-multani-mitti-face-pack', 101, { isFeatured: true, isBestSeller: true }),
+    offlineProduct('Neem & Tulsi Clarifying Pack', 'neem-and-tulsi-clarifying-pack', 143, { isFeatured: true }),
+  ],
+  bestseller: [
+    offlineProduct('Pure Multani Mitti Powder', 'pure-multani-mitti-powder', 84, { isBestSeller: true }),
+    offlineProduct('Rose Multani Mitti Face Pack', 'rose-multani-mitti-face-pack', 109, { isBestSeller: true }),
+    offlineProduct('Neem Multani Mitti Face Pack', 'neem-multani-mitti-face-pack', 101, { isBestSeller: true }),
+    offlineProduct('Ubtan Turmeric Face Pack', 'ubtan-turmeric-face-pack', 119, { isBestSeller: true }),
+  ],
+  new: [
+    offlineProduct('Multani Mitti Oil-Control Mask', 'multani-mitti-oil-control-mask', 134, { isNewArrival: true }),
+    offlineProduct('Rose & Sandalwood Glow Pack', 'rose-and-sandalwood-glow-pack', 135, { isNewArrival: true }),
+    offlineProduct('Aloe & Cucumber Cooling Pack', 'aloe-and-cucumber-cooling-pack', 125, { isNewArrival: true }),
+    offlineProduct('Multani Mitti & Amla Hair Mask', 'multani-mitti-and-amla-hair-mask', 158, { isNewArrival: true }),
+  ],
+};
 const Row = ({ title, filter, to }) => {
   const { data, loading } = useFetch(() => api().get(`/products?filter=${filter}&limit=50`), [filter]);
-  if (!loading && !data?.products?.length) return null;
+  const products = data?.products?.length ? data.products : offlineProducts[filter];
+  if (!loading && !products?.length) return null;
   return (<section className="container-x mt-16"><div className="mb-6 flex items-end justify-between"><h2 className="text-4xl font-semibold">{title}</h2><Link to={to} className="text-sm font-semibold text-sage-dark underline">View all</Link></div>
-    {loading ? <Spinner /> : <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">{data.products.map(p => <ProductCard key={p._id} p={p} />)}</div>}</section>);
+    {loading && !data ? <Spinner /> : <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">{products.map(p => <ProductCard key={p._id} p={p} />)}</div>}</section>);
 };
 const faqs = [['Is Multani Mitti safe for sensitive skin?', 'Pure Multani Mitti is gentle for most skin types. Do a patch test on your jawline first and rinse before it fully dries.'], ['How often should I use a face pack?', 'Two to three times a week is enough for oily skin; once a week for dry or sensitive skin.'], ['How long does delivery take?', 'Most orders reach you in 4–7 working days across India. You can track every step from your account.'], ['Can I return a product?', 'Unopened products can be returned within 7 days of delivery. See our return policy for details.']];
 const offlineHero = [
