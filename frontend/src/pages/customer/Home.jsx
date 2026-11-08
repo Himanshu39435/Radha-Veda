@@ -11,7 +11,7 @@ import { money } from '../../lib/utils';
 import { useSettings } from '../../components/ShopLayout';
 
 const Row = ({ title, filter, to }) => {
-  const { data, loading } = useFetch(() => api().get(`/products?filter=${filter}&limit=4`), [filter]);
+  const { data, loading } = useFetch(() => api().get(`/products?filter=${filter}&limit=50`), [filter]);
   if (!loading && !data?.products?.length) return null;
   return (<section className="container-x mt-16"><div className="mb-6 flex items-end justify-between"><h2 className="text-4xl font-semibold">{title}</h2><Link to={to} className="text-sm font-semibold text-sage-dark underline">View all</Link></div>
     {loading ? <Spinner /> : <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">{data.products.map(p => <ProductCard key={p._id} p={p} />)}</div>}</section>);
