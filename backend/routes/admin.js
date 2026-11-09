@@ -51,7 +51,7 @@ router.get('/customers/:id', ah(async (req, res) => {
 // ---------- Staff management ----------
 const PERMS = ['orders.view', 'orders.update', 'orders.invoice', 'orders.payment'];
 router.get('/staff', ah(async (req, res) => {
-  const list = await Staff.find().populate('user', 'name email phone isActive');
+  const list = (await Staff.find().populate('user', 'name email phone isActive')).filter(s => s.user);
   const counts = await Order.aggregate([{ $match: { assignedTo: { $ne: null } } }, { $group: { _id: '$assignedTo', n: { $sum: 1 } } }]);
   res.json(list.map(s => ({ ...s.toObject(), assignedOrders: counts.find(c => String(c._id) === String(s.user._id))?.n || 0, activity: s.activity.slice(-20).reverse() })));
 }));

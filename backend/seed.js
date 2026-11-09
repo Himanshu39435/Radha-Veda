@@ -6,14 +6,17 @@ const M = require('./models');
   await connectDB();
   if (process.argv.includes('--reset')) await Promise.all(Object.values(M).filter(m => m.deleteMany).map(m => m.deleteMany({})));
   const adminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@radhaveda.com';
-  await M.User.findOneAndUpdate(
-    { email: adminEmail.toLowerCase() },
-    {
-      $set: { role: 'admin', isActive: true },
-      $setOnInsert: { name: 'Radha Veda Admin', email: adminEmail.toLowerCase(), password: process.env.SEED_ADMIN_PASSWORD || 'Admin@12345' },
-    },
-    { upsert: true, new: true }
-  );
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD || 'Admin@12345';
+  let admin = await M.User.findOne({ email: adminEmail.toLowerCase() }).select('+password');
+  if (!admin) {
+    admin = new M.User({ name: 'Radha Veda Admin', email: adminEmail.toLowerCase(), password: adminPassword });
+  } else {
+    admin.role = 'admin';
+    admin.isActive = true;
+    admin.password = adminPassword;
+    admin.markModified('password');
+  }
+  await admin.save();
   if (!(await M.User.findOne({ email: 'staff@radhaveda.com' }))) { const u = await M.User.create({ name: 'Demo Staff', email: 'staff@radhaveda.com', password: 'Staff@12345', role: 'staff' }); await M.Staff.create({ user: u._id, permissions: ['orders.view', 'orders.update', 'orders.invoice', 'orders.payment'] }); }
   await M.Setting.findOneAndUpdate({ key: 'main' }, { brandName: 'Radha Veda', contact: { email: 'hello@radhaveda.com', phone: '+91 9525206883', address: 'Jaipur, Rajasthan, India' }, whatsapp: '919525206883', shippingCharge: 60, freeShippingThreshold: 499, returnPolicy: 'Returns accepted within 7 days of delivery for unopened products.', privacyPolicy: 'We respect your privacy.', terms: 'By ordering you agree to our terms.' }, { upsert: true });
   const cats = {};
