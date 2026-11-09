@@ -48,6 +48,17 @@ router.get('/customers/:id', ah(async (req, res) => {
   res.json({ customer: c, addresses: await Address.find({ user: c._id }), orders: await Order.find({ user: c._id }).sort('-createdAt') });
 }));
 
+router.put('/users/:id', ah(async (req, res) => {
+  const b = z.object({ role: z.enum(['customer', 'staff', 'admin']), isActive: z.boolean().optional() }).parse(req.body);
+  const u = await User.findById(req.params.id); if (!u) throw new HttpError(404, 'User not found');
+  const primaryEmail = (process.env.SEED_ADMIN_EMAIL || 'admin@radhaveda.com').toLowerCase();
+  if (u.email === primaryEmail) throw new HttpError(403, 'Primary admin cannot be changed');
+  u.role = b.role; if (b.isActive !== undefined) u.isActive = b.isActive; await u.save();
+  if (b.role === 'staff') await Staff.findOneAndUpdate({ user: u._id }, { user: u._id, permissions: PERMS }, { upsert: true, new: true });
+  else await Staff.deleteOne({ user: u._id });
+  res.json({ id: u._id, name: u.name, email: u.email, phone: u.phone, role: u.role, isActive: u.isActive });
+}));
+
 // ---------- Staff management ----------
 const PERMS = ['orders.view', 'orders.update', 'orders.invoice', 'orders.payment'];
 router.get('/staff', ah(async (req, res) => {
@@ -65,6 +76,7 @@ router.put('/staff/:id', ah(async (req, res) => {
   const b = z.object({ name: z.string().min(2).optional(), phone: z.string().optional(), password: z.string().min(8).optional(), isActive: z.boolean().optional(), permissions: z.array(z.enum(PERMS)).optional() }).parse(req.body);
   const s = await Staff.findById(req.params.id); if (!s) throw new HttpError(404, 'Not found');
   const u = await User.findById(s.user);
+  if (u.email === (process.env.SEED_ADMIN_EMAIL || 'admin@radhaveda.com').toLowerCase()) throw new HttpError(403, 'Primary admin cannot be changed');
   for (const k of ['name', 'phone', 'password', 'isActive']) if (b[k] !== undefined) u[k] = b[k];
   await u.save(); if (b.permissions) { s.permissions = b.permissions; await s.save(); }
   res.json(s);
